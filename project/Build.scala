@@ -12,6 +12,8 @@ object ApplicationBuild extends Build {
 
     val appDependencies = Seq(
       "com.typesafe" %% "play-plugins-mailer" % "2.0.2",
+      "be.objectify"  %%  "deadbolt-2"        % "1.1.3-SNAPSHOT",
+      "com.feth"      %%  "play-authenticate" % "0.2.1-SNAPSHOT",
       "org.mindrot" % "jbcrypt" % "0.3m",
       "mysql" % "mysql-connector-java" % "5.1.21"
     )
@@ -21,9 +23,17 @@ object ApplicationBuild extends Build {
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA, settings = s)
     .settings(cloudBeesSettings :_*)
     .settings(CloudBees.applicationId := Some("breizhcamp/cfp")).settings(
-    // Add your own project settings here
-    resolvers += "Apache" at "http://repo1.maven.org/maven2/",
-    resolvers += "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/"
+            // Add your own project settings here
+            resolvers += Resolver.url("Objectify Play Repository", url("http://schaloner.github.com/releases/"))(Resolver.ivyStylePatterns),
+            resolvers += Resolver.url("Objectify Play Repository", url("http://schaloner.github.com/snapshots/"))(Resolver.ivyStylePatterns),
+            resolvers += Resolver.url("play-easymail (release)", url("http://joscha.github.com/play-easymail/repo/releases/"))(Resolver.ivyStylePatterns),
+            resolvers += Resolver.url("play-easymail (snapshot)", url("http://joscha.github.com/play-easymail/repo/snapshots/"))(Resolver.ivyStylePatterns),
+
+            resolvers += Resolver.url("play-authenticate (release)", url("http://joscha.github.com/play-authenticate/repo/releases/"))(Resolver.ivyStylePatterns),
+            resolvers += Resolver.url("play-authenticate (snapshot)", url("http://joscha.github.com/play-authenticate/repo/snapshots/"))(Resolver.ivyStylePatterns),
+
+            resolvers += "Apache" at "http://repo1.maven.org/maven2/",
+            resolvers += "jBCrypt Repository" at "http://repo1.maven.org/maven2/org/"
     )
 
     object Tasks {

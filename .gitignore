@@ -26,7 +26,7 @@ eclipse
 lib
 log
 logs
-modules
+/modules
 precompiled
 project/project
 project/target
@@ -34,5 +34,4 @@ target
 tmp
 test-result
 server.pid
-modules
 *.db

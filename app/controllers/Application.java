@@ -9,9 +9,6 @@ import play.i18n.Messages;
 import play.mvc.Controller;
 import play.mvc.Result;
 
-import java.util.List;
-import java.util.Map;
-
 import static play.libs.Json.toJson;
 
 /**
@@ -116,6 +113,20 @@ public class Application extends Controller {
             session("email", loginForm.get().email);
             return ok(toJson(User.findByEmail(loginForm.get().email)));
         }
+    }
+
+    public static final String FLASH_MESSAGE_KEY = "message";
+    public static final String FLASH_ERROR_KEY = "error";
+
+    public static Result oAuthDenied(final String providerKey) {
+        //com.feth.play.module.pa.controllers.Authenticate.noCache(response());
+        flash(FLASH_ERROR_KEY,
+                "You need to accept the OAuth connection in order to use this website!");
+        return redirect(routes.Application.index());
+    }
+
+    public static Result index(){
+        return redirect("/");
     }
 
     /**
