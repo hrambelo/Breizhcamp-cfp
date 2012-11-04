@@ -4,14 +4,14 @@
 
 # Home page
 GET     /                           controllers.Assets.at(path="/public", file="index.html")
-GET     /index                           controllers.Application.index
+GET     /index                      controllers.Application.index
 
 POST    /login                      controllers.Application.authenticate()
 GET     /logout                     controllers.Application.logout()
 
-#GET     /logout                            com.feth.play.module.pa.controllers.Authenticate.logout
+#GET     /logout                             com.feth.play.module.pa.controllers.Authenticate.logout
 GET     /authenticate/:provider             com.feth.play.module.pa.controllers.Authenticate.authenticate(provider: String)
-GET     /authenticate/:provider/denied      controllers.Application.oAuthDenied(provider: String)
+GET     /authenticate/:provider/denied       controllers.Application.oAuthDenied(provider: String)
 
 GET     /settings/user/:id          controllers.account.settings.Account.getUser(id:Long)
 POST    /settings/password          controllers.account.settings.Password.runPassword()

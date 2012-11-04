@@ -1,9 +1,7 @@
 package controllers.account;
 
-import controllers.Application;
 import models.User;
 import models.utils.AppException;
-import models.utils.Hash;
 import models.utils.Mail;
 import models.utils.TransformValidationErrors;
 import org.apache.commons.mail.EmailException;
@@ -14,10 +12,10 @@ import play.data.Form;
 import play.i18n.Messages;
 import play.mvc.Controller;
 import play.mvc.Result;
+import service.providers.CfpUsernamePasswordAuthProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.UUID;
 
 import static play.libs.Json.toJson;
 
@@ -36,42 +34,24 @@ public class Signup extends Controller {
      */
     public static Result save() {
         JsonNode newUser = request().body().asJson();
-        Form<Application.Register> registerForm;
+        Form<CfpUsernamePasswordAuthProvider.MySignup> registerForm;
         if (newUser == null) {
-            registerForm = form(Application.Register.class).bindFromRequest();
+            registerForm = CfpUsernamePasswordAuthProvider.SIGNUP_FORM.bindFromRequest();
         } else {
-            registerForm = form(Application.Register.class).bind(newUser);
+            registerForm = CfpUsernamePasswordAuthProvider.SIGNUP_FORM.bind(newUser);
         }
 
 
         if (registerForm.hasErrors()) {
+            // User did not fill everything properly
             return badRequest(toJson(TransformValidationErrors.transform(registerForm.errors())));
-        }
-
-        Application.Register register = registerForm.get();
-        Result resultError = checkBeforeSave(register.email);
-
-        if (resultError != null) {
-            return resultError;
-        }
-
-        try {
-            User user = new User();
-            user.email = register.email;
-            user.fullname = register.fullname;
-            user.passwordHash = Hash.createPassword(register.inputPassword);
-            user.confirmationToken = UUID.randomUUID().toString();
-
-            user.save();
-            sendMailAskForConfirmation(user);
-
+        } else {
+            // Everything was filled
+            // do something with your part of the form before handling the user
+            // signup
+            CfpUsernamePasswordAuthProvider.handleSignup(ctx());
             return ok();
-        } catch (EmailException e) {
-            Logger.error("Signup.save Cannot send email", e);
-        } catch (Exception e) {
-            Logger.error("Signup.save error", e);
         }
-        return badRequest(toJson(TransformValidationErrors.transform(Messages.get("error.technical"))));
     }
 
     /**
@@ -95,7 +75,7 @@ public class Signup extends Controller {
      * @param user user created
      * @throws EmailException Exception when sending mail
      */
-    private static void sendMailAskForConfirmation(User user) throws EmailException, MalformedURLException {
+    public static void sendMailAskForConfirmation(User user) throws EmailException, MalformedURLException {
         String subject = Messages.get("mail.confirm.subject");
         String urlString = "http://" + Configuration.root().getString("server.hostname");
         urlString += "/#/confirm/" + user.confirmationToken;
@@ -136,6 +116,10 @@ public class Signup extends Controller {
             Logger.debug("Cannot send email", e);
         }
         return badRequest();
+    }
+
+    public Result signup(){
+        return ok();
     }
 
     /**

@@ -1,4 +1,5 @@
 1500:com.typesafe.plugin.CommonsMailerPlugin
 10005:service.CfpUserServicePlugin
+10040:service.providers.CfpUsernamePasswordAuthProvider
 10060:com.feth.play.module.pa.providers.oauth1.twitter.TwitterAuthProvider
 

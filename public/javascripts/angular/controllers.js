@@ -83,8 +83,10 @@ function LoginController($scope, $log, UserService, PasswordService, $http, $loc
               $location.url("signup");
             }).error(function(data, status, headers, config) {
                 $scope.newerrors = data;
+                $log.info('code http de la réponse : ' + status);
             });
-    }
+    };
+
 }
 // Pour que l'injection de dépendances fonctionne en cas de 'minifying'
 LoginController.$inject = ['$scope', '$log', 'UserService', 'PasswordService', '$http', '$location'];

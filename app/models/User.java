@@ -2,6 +2,7 @@ package models;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.ExpressionList;
+import com.feth.play.module.pa.providers.password.UsernamePasswordAuthUser;
 import com.feth.play.module.pa.user.AuthUser;
 import com.feth.play.module.pa.user.AuthUserIdentity;
 import com.feth.play.module.pa.user.EmailIdentity;
@@ -10,6 +11,7 @@ import models.utils.AppException;
 import models.utils.Hash;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.BooleanUtils;
+import org.codehaus.jackson.annotate.JsonProperty;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
@@ -49,6 +51,11 @@ public class User extends Model {
 
     @OneToMany(cascade = CascadeType.ALL)
     public List<LinkedAccount> linkedAccounts;
+
+    @JsonProperty(value = "linkSize")
+    public int linkSize(){
+        return  linkedAccounts.size();
+    }
 
     @Formats.NonEmpty
     public Boolean validated = false;
@@ -209,14 +216,14 @@ public class User extends Model {
      */
 
     public static boolean existsByAuthUserIdentity(
-            final AuthUserIdentity identity) {
-        final ExpressionList<User> exp = getAuthUserFind(identity);
+            final AuthUserIdentity identity,boolean validated) {
+        final ExpressionList<User> exp = getAuthUserFind(identity,validated);
         return exp.findRowCount() > 0;
     }
 
     private static ExpressionList<User> getAuthUserFind(
-            final AuthUserIdentity identity) {
-        return find.where().eq("active", true)
+            final AuthUserIdentity identity,boolean validated) {
+        return find.where().eq("validated", validated)
                 .eq("linkedAccounts.providerUserId", identity.getId())
                 .eq("linkedAccounts.providerKey", identity.getProvider());
     }
@@ -225,7 +232,7 @@ public class User extends Model {
         if (identity == null) {
             return null;
         }
-        return getAuthUserFind(identity).findUnique();
+        return getAuthUserFind(identity,true).findUnique();
     }
 
     public Set<String> getProviders() {
@@ -246,6 +253,21 @@ public class User extends Model {
 
     public LinkedAccount getAccountByProvider(final String providerKey) {
         return LinkedAccount.findByProviderKey(this, providerKey);
+    }
+
+    public static User findByUsernamePasswordIdentity(
+            final UsernamePasswordAuthUser identity) {
+        return getUsernamePasswordAuthUserFind(identity).findUnique();
+    }
+
+    private static ExpressionList<User> getUsernamePasswordAuthUserFind(
+            final UsernamePasswordAuthUser identity) {
+        return getEmailUserFind(identity.getEmail()).eq(
+                "linkedAccounts.providerKey", identity.getProvider());
+    }
+
+    private static ExpressionList<User> getEmailUserFind(final String email) {
+        return find.where().eq("validated", true).eq("email", email);
     }
 
     public void merge(final User otherUser) {
@@ -276,6 +298,7 @@ public class User extends Model {
             // verified within the application as a security breach there might
             // break your security as well!
             user.email = identity.getEmail();
+            user.confirmationToken = UUID.randomUUID().toString();
         }
 
         if (authUser instanceof NameIdentity) {
@@ -285,7 +308,6 @@ public class User extends Model {
                 user.fullname = name;
             }
         }
-
         user.save();
         return user;
     }

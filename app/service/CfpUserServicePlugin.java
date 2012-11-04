@@ -15,7 +15,7 @@ public class CfpUserServicePlugin extends UserServicePlugin{
 
     @Override
     public Object save(final AuthUser authUser) {
-        final boolean isLinked = User.existsByAuthUserIdentity(authUser);
+        final boolean isLinked = User.existsByAuthUserIdentity(authUser,false);
         if (!isLinked) {
             return User.create(authUser).id;
         } else {
