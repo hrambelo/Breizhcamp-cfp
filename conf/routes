@@ -36,9 +36,12 @@ POST    /reset/:token               controllers.account.Reset.runReset(token:Str
 GET     /email/:token               controllers.account.settings.Email.validateEmail(token:String)
 
 POST    /admin/submitusers          controllers.Admin.submitUsers()
+GET     /admin/vote                 controllers.Admin.getVoteStatus()
+POST    /admin/vote/:newStatus      controllers.Admin.changeVoteStatus(newStatus:String)
 
 POST    /talks/:idTalk/comment      controllers.talks.TalkRestController.saveComment(idTalk:Long)
 POST    /talks/:idTalk/status       controllers.talks.TalkRestController.saveStatus(idTalk:Long)
+POST    /talks/:idTalk/vote/:note   controllers.talks.TalkRestController.saveVote(idTalk:Long,note:Integer)
 GET		/talk/all					controllers.talks.TalkRestController.all()
 GET		/talk/:idTalk				controllers.talks.TalkRestController.getById(idTalk:Long)
 GET		/talk						controllers.talks.TalkRestController.get()
@@ -48,6 +51,7 @@ GET	/talk/:idTalk/tags/:tags 	    controllers.talks.TalkRestController.addTag(id
 POST	/talk/:idTalk/tags/:tags 	controllers.talks.TalkRestController.addTag(idTalk:Long,tags:String)
 
 GET		/user/:userId/talks			controllers.talks.TalkRestController.getTalks(userId:Long)
+GET		/user/:userId/talksAccepted	controllers.talks.TalkRestController.getTalksAccepted(userId:Long)
 
 GET     /admin/users/get            controllers.UserRestController.get()
 

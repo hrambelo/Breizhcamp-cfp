@@ -107,8 +107,8 @@ function NewTalkController($scope, $log, $location, TalkService) {
 		TalkService.save($scope.talk, function(data) {	
 			$log.info("Soummission du talk ok");
 			$location.url('/managetalk');
-		}, function (err) {
-			$log.info("Soummission du talk ko");
+        }, function (err) {
+            $log.info("Soummission du talk ko");
             $log.info(err.data);
             $scope.errors = err.data;
 		});	
@@ -143,11 +143,11 @@ function EditTalkController($scope, $log, $location, $routeParams, TalkService, 
     $scope.addTag = function() {
         $log.info("Ajout de tags " + $scope.tags);
 
-        var data = {'tags' : $scope.talk.tags,'idTalk' : $scope.talk.id};
+        var data = {'tags' : $scope.talk.tagsname,'idTalk' : $scope.talk.id};
 
         http({
             method : 'POST',
-            url : '/talk/' + $scope.talk.id + '/tags/'+$scope.talk.tags,
+            url : '/talk/' + $scope.talk.id + '/tags/'+$scope.talk.tagsname,
             data : data
         }).success(function(data, status, headers, config) {
                 $log.info(status);
@@ -171,13 +171,17 @@ function ManageTalkController($scope, $log, $location, TalkService) {
 	$scope.talks = TalkService.query();
 	
 	$scope.deleteTalk = function(talk) {
-		$log.info("Delete du talk " + talk.id);
-		TalkService.delete({'id': talk.id}, function(data) {
-			$log.info("Delete du talk ok");
-			$location.url('/managetalk');
-	    }, function(err) {
-	    	  $log.info("Delete du talk ko : " + err);
-	    });
+        var confirmation = confirm('Êtes vous sûr de vouloir supprimer les talks titre talk?');
+        if (confirmation) {
+            TalkService.delete({'id': talk.id}, function(data) {
+                $scope.talks = TalkService.query();
+                $scope.errors = undefined;
+            }, function(err) {
+                $log.info("Delete du talk ko");
+                $log.info(err);
+                $scope.errors = err.data;
+            });
+        }
 	}
 	
 }
@@ -221,19 +225,52 @@ function ManageUsersController($scope, $log, $location, ManageUsersService, http
 // Pour que l'injection de dépendances fonctionne en cas de 'minifying'
 ManageUsersController.$inject = ['$scope', '$log', '$location', 'ManageUsersService', '$http'];
 
-function ListTalksController($scope, $log, AllTalkService) {
+function ListTalksController($scope, $log, AllTalkService, VoteService) {
 
     $scope.checkloc(true);
 
     $scope.talks = AllTalkService.query();
-}
-ListTalksController.$inject = ['$scope', '$log', 'AllTalkService'];
 
-function SeeTalksController($scope, $log, $routeParams, TalkService, http) {
+    $scope.vote = VoteService.getVote();
+
+    $scope.predicate = 'moyenne';
+
+    $scope.reverse = true;
+}
+ListTalksController.$inject = ['$scope', '$log', 'AllTalkService', 'VoteService'];
+
+function VoteController($scope, $log, VoteService, $http) {
+
+    $scope.checkloc(true);
+
+    $scope.vote = VoteService.getVote();
+
+    $log.info($scope.vote);
+
+    $scope.submitVote = function() {
+        var vote = $scope.vote;
+        $http({
+            method: 'POST',
+            url: '/admin/vote/' + vote.status
+        }).success(function() {
+                $scope.error = undefined;
+                $scope.success = "Le changement de status du votes a bien été pris en compte."
+            }).error(function(){
+                $scope.error = "Une erreur est survenue pendant le changement de status des votes";
+                $scope.success = undefined;
+            });
+    }
+}
+
+VoteController.$inject = ['$scope', '$log', 'VoteService', '$http'];
+
+function SeeTalksController($scope, $log, $routeParams, TalkService, http, VoteService) {
 
     $scope.checkloc(false);
 
     $scope.talk = TalkService.get({id:$routeParams.talkId});
+
+    $scope.voteStatus = VoteService.getVote();
 
     $scope.postComment = function() {
         $log.info("Sauvegarde du commentaire " + $scope.comment);
@@ -271,9 +308,26 @@ function SeeTalksController($scope, $log, $routeParams, TalkService, http) {
                 $log.info(status);
                 $scope.errors = data;
             });
+    };
+
+    $scope.postVote = function() {
+        $log.info("postVote");
+        $log.info($scope.talk);
+
+        http({
+            method : 'POST',
+            url : '/talks/' + $scope.talk.id + '/vote/' + $scope.talk.vote.note
+        }).success(function(data, status, headers, config) {
+                $log.info(status);
+                $scope.errors = undefined;
+                $scope.talk = TalkService.get({id:$routeParams.talkId});
+            }).error(function(data, status, headers, config) {
+                $log.info(status);
+                $scope.errors = data;
+            });
     }
 }
-SeeTalksController.$inject = ['$scope', '$log', '$routeParams', 'TalkService', '$http'];
+SeeTalksController.$inject = ['$scope', '$log', '$routeParams', 'TalkService', '$http', 'VoteService'];
 
 function ProfilController($scope, $log, $routeParams, AccountService, ProfilService, http) {
 
@@ -283,6 +337,7 @@ function ProfilController($scope, $log, $routeParams, AccountService, ProfilServ
     $scope.user = AccountService.getUser(idUSer);
 
     $scope.talks = ProfilService.getTalks(idUSer);
+    $scope.talksok = ProfilService.getTalksAccepted(idUSer);
 
 
 }

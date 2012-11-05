@@ -102,6 +102,10 @@ Services.factory('ProfilService', function($resource) {
     function ProfilService($resource) {
         this.getTalks = function (userId) {
             return $resource('/user/:userId/talks').query({userId:userId});
+        };
+
+        this.getTalksAccepted = function (userId) {
+                return $resource('/user/:userId/talksAccepted').query({userId:userId});
         }
     }
 
@@ -115,6 +119,21 @@ Services.factory('TalkService', function($resource) {
 Services.factory('AllTalkService', function($resource) {
     return $resource('/talk/all', {});
 });
+
+
+Services.factory('VoteService', function($resource, $http, $log) {
+    function VoteService($resource, $http, $log) {
+
+        this.getVote = function () {
+            return $resource('/admin/vote', {}).get();
+        }
+    }
+
+
+    return new VoteService($resource, $http, $log);
+});
+
+
 
 Services.factory('ManageUsersService', function($resource) {
         return $resource('/admin/users/get', {});
