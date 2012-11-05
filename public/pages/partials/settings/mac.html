@@ -1,4 +1,6 @@
 <div class="row">
+
+
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2 breadcrumb">
@@ -8,28 +10,39 @@
                 <br/>
                 <a href="/#/settings/notifs">Notifications</a>
                 <br/>
-                Mot de passe
+                <a href="/#/settings/password">Mot de passe</a>
                 <br/>
                 <a href="/#/settings/email">Adresse mail</a>
                 <br/>
-                <a href="/#/settings/mac">Adresse mac</a>
+                Adresse Mac
                 <br/>
                 <a href="/#/settings/link">Lier d'autres fournisseurs</a>
             </div>
             <div class="span10">
                 <div class="well">
-                    Cliquez sur Valider pour recevoir les instructions par mail.
-                    <p class="">
+                    <form ng-submit="changeMac()">
+                        <fieldset>
+                            <legend>Adresse Mac pour l'accès au WIFI</legend>
+                            <div class="control-group ">
+                                <div class="controls">
+                                    <label class="adresseMac">
+                                        <input type="text" id="adresseMac" name="adresseMac" ng-model="user.adresseMac">
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+
+
                         <span id="messageSuccess" class="badge badge-success hide"></span>
-                        <span id="messageError" class="badge badge-important hide"</span>
-                    </p>
-                    <form ng-submit="resetPassword()">
+                        <span id="messageError" class="badge badge-important hide"></span>
+
                         <div class="form-actions">
                             <input type="submit" class="btn btn-primary" value="Valider">
                         </div>
+
                     </form>
                 </div>
-
             </div>
         </div>
     </div>

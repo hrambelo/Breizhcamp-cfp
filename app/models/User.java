@@ -53,8 +53,8 @@ public class User extends Model {
     public List<LinkedAccount> linkedAccounts;
 
     @JsonProperty(value = "linkSize")
-    public int linkSize(){
-        return  linkedAccounts.size();
+    public int linkSize() {
+        return linkedAccounts.size();
     }
 
     @Formats.NonEmpty
@@ -67,6 +67,9 @@ public class User extends Model {
     private Boolean notifAdminOnAllTalk;
 
     private Boolean notifAdminOnTalkWithComment;
+
+    @Constraints.Pattern("^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$")
+    public String adresseMac;
 
     public boolean getNotifOnMyTalk() {
         return BooleanUtils.isNotFalse(notifOnMyTalk);
@@ -216,13 +219,13 @@ public class User extends Model {
      */
 
     public static boolean existsByAuthUserIdentity(
-            final AuthUserIdentity identity,boolean validated) {
-        final ExpressionList<User> exp = getAuthUserFind(identity,validated);
+            final AuthUserIdentity identity, boolean validated) {
+        final ExpressionList<User> exp = getAuthUserFind(identity, validated);
         return exp.findRowCount() > 0;
     }
 
     private static ExpressionList<User> getAuthUserFind(
-            final AuthUserIdentity identity,boolean validated) {
+            final AuthUserIdentity identity, boolean validated) {
         return find.where().eq("validated", validated)
                 .eq("linkedAccounts.providerUserId", identity.getId())
                 .eq("linkedAccounts.providerKey", identity.getProvider());
@@ -232,7 +235,7 @@ public class User extends Model {
         if (identity == null) {
             return null;
         }
-        return getAuthUserFind(identity,true).findUnique();
+        return getAuthUserFind(identity, true).findUnique();
     }
 
     public Set<String> getProviders() {

@@ -14,10 +14,13 @@
                 <br/>
                 <a href="/#/settings/email">Adresse mail</a>
                 <br/>
+                <a href="/#/settings/mac">Adresse mac</a>
+                <br/>
                 <a href="/#/settings/link">Lier d'autres fournisseurs</a>
             </div>
             <div class="span10">
                 <div class="well">
+                    <a ng-href="/#/profil/{{user.id}}" >aperçu</a>
                     <form ng-submit="saveSettings()">
                         <fieldset>
                             <legend>Description/Bio</legend>
