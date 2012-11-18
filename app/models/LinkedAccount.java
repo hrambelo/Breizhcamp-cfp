@@ -1,12 +1,11 @@
 package models;
 
+import com.feth.play.module.pa.user.AuthUser;
 import play.db.ebean.Model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-
-import com.feth.play.module.pa.user.AuthUser;
 
 
 @Entity
@@ -37,6 +36,7 @@ public class LinkedAccount extends Model {
     public static LinkedAccount create(final AuthUser authUser) {
         final LinkedAccount ret = new LinkedAccount();
         ret.update(authUser);
+        ret.save();
         return ret;
     }
 

@@ -536,6 +536,7 @@ function ConfirmSignupController($scope, $log, $http, $routeParams) {
             $scope.successMessage = 'Votre compte est validé';
             $scope.showSuccess = true;
         }).error(function (data, status, headers, config) {
+            $log.info(data);
             $scope.errorMessage = 'Une erreur a eu lieu pendant la confirmation (' + status + ')';
             $scope.showError = true;
         });

@@ -122,7 +122,7 @@ public class Application extends Controller {
         //com.feth.play.module.pa.controllers.Authenticate.noCache(response());
         flash(FLASH_ERROR_KEY,
                 "You need to accept the OAuth connection in order to use this website!");
-        return redirect(routes.Application.index());
+        return null; //redirect(routes.Application.index());
     }
 
     public static Result index(){

@@ -5,13 +5,11 @@ import com.feth.play.module.mail.Mailer;
 import com.feth.play.module.pa.PlayAuthenticate;
 import com.feth.play.module.pa.providers.password.UsernamePasswordAuthProvider;
 import com.feth.play.module.pa.providers.password.UsernamePasswordAuthUser;
-import controllers.account.Signup;
 import controllers.routes;
 import models.LinkedAccount;
 import models.User;
-import org.apache.commons.mail.EmailException;
 import play.Application;
-import play.Logger;
+import play.Configuration;
 import play.data.Form;
 import play.data.validation.Constraints;
 import play.i18n.Messages;
@@ -20,6 +18,7 @@ import play.mvc.Controller;
 import play.mvc.Http;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -125,7 +124,6 @@ public class CfpUsernamePasswordAuthProvider extends
             } else {
                 // this user exists, is active but has not yet validated its
                 // email
-                sendVerifyEmailMailingAfterSignup(u,null);
                 return SignupResult.USER_EXISTS_UNVERIFIED;
             }
         }
@@ -136,7 +134,7 @@ public class CfpUsernamePasswordAuthProvider extends
         // if you return
         // return SignupResult.USER_CREATED;
         // then the user gets logged in directly
-        sendVerifyEmailMailingAfterSignup(newUser,null);
+
         return SignupResult.USER_CREATED_UNVERIFIED;
     }
 
@@ -197,7 +195,7 @@ public class CfpUsernamePasswordAuthProvider extends
     @Override
     protected String getVerifyEmailMailingSubject(
             final CfpUsernamePasswordAuthUser user, final Http.Context ctx) {
-        return Messages.get("playauthenticate.password.verify_signup.subject");
+        return Messages.get("mail.confirm.subject");
     }
 
     @Override
@@ -211,9 +209,16 @@ public class CfpUsernamePasswordAuthProvider extends
     @Override
     protected Mailer.Mail.Body getVerifyEmailMailingBody(final String token,
                                              final CfpUsernamePasswordAuthUser user, final Http.Context ctx) {
+        String urlString = "http://" + Configuration.root().getString("server.hostname");
+        urlString += "/#/confirm/" + token;
+        URL url = null; // validate the URL, will throw an exception if bad.
+        try {
+            url = new URL(urlString);
+        } catch (MalformedURLException e) {
+        }
+        String message = Messages.get("mail.confirm.message", url.toString());
 
-        //TODO
-        return null;
+        return new Mailer.Mail.Body(message, message);
     }
 
     private static String generateToken() {
@@ -223,12 +228,13 @@ public class CfpUsernamePasswordAuthProvider extends
     @Override
     protected String generateVerificationRecord(
             final CfpUsernamePasswordAuthUser user) {
-        return generateVerificationRecord(User.findByAuthUserIdentity(user));
+        return generateVerificationRecord(User.findByEmail(user.getEmail()));
     }
 
     protected String generateVerificationRecord(final User user) {
         final String token = generateToken();
-        //TODO
+        user.confirmationToken = token;
+        user.save();
         return token;
     }
 
@@ -252,17 +258,6 @@ public class CfpUsernamePasswordAuthProvider extends
 
 
 
-
-    public void sendVerifyEmailMailingAfterSignup(final User user,
-                                                  final Http.Context ctx) {
-        try {
-            Signup.sendMailAskForConfirmation(user);
-        } catch (EmailException e) {
-            Logger.error(""+e);
-        } catch (MalformedURLException e) {
-            Logger.error(""+e);
-        }
-    }
 
     private String getEmailName(final User user) {
         return getEmailName(user.email, user.fullname);

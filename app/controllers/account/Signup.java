@@ -95,10 +95,12 @@ public class Signup extends Controller {
     public static Result confirm(String token) {
         User user = User.findByConfirmationToken(token);
         if (user == null) {
+            Logger.debug("Signup.confirm cannot find user");
             return badRequest();
         }
 
         if (user.validated) {
+            Logger.debug("Signup.confirm user allready confirm");
             return badRequest();
         }
 

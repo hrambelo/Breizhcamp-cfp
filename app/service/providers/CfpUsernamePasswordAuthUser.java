@@ -1,9 +1,10 @@
 package service.providers;
 
-import service.providers.CfpUsernamePasswordAuthProvider.MySignup;
-
 import com.feth.play.module.pa.providers.password.UsernamePasswordAuthUser;
 import com.feth.play.module.pa.user.NameIdentity;
+import models.utils.AppException;
+import models.utils.Hash;
+import service.providers.CfpUsernamePasswordAuthProvider.MySignup;
 
 public class CfpUsernamePasswordAuthUser extends UsernamePasswordAuthUser
         implements NameIdentity {
@@ -31,5 +32,15 @@ public class CfpUsernamePasswordAuthUser extends UsernamePasswordAuthUser
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    protected String createPassword(String clearString) {
+        try {
+            return Hash.createPassword(clearString);
+        } catch (AppException e) {
+
+        }
+        return null;
     }
 }

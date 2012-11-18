@@ -1,5 +1,8 @@
 package models;
 
+import be.objectify.deadbolt.models.Permission;
+import be.objectify.deadbolt.models.Role;
+import be.objectify.deadbolt.models.RoleHolder;
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.ExpressionList;
 import com.feth.play.module.pa.providers.password.UsernamePasswordAuthUser;
@@ -15,6 +18,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
+import service.providers.CfpUsernamePasswordAuthProvider;
 
 import javax.persistence.*;
 import java.util.*;
@@ -25,7 +29,7 @@ import java.util.*;
  */
 @SuppressWarnings("serial")
 @Entity
-public class User extends Model {
+public class User extends Model implements RoleHolder {
 
     @Id
     public Long id;
@@ -181,6 +185,11 @@ public class User extends Model {
 
     public void changePassword(String password) throws AppException {
         this.passwordHash = Hash.createPassword(password);
+        LinkedAccount linkedAccount =  LinkedAccount.findByProviderKey(this, CfpUsernamePasswordAuthProvider.getProvider().getKey());
+        if(linkedAccount != null){
+            linkedAccount.providerUserId = this.passwordHash;
+            linkedAccount.save();
+        }
         this.save();
     }
 
@@ -224,7 +233,7 @@ public class User extends Model {
         return exp.findRowCount() > 0;
     }
 
-    private static ExpressionList<User> getAuthUserFind(
+    public static ExpressionList<User> getAuthUserFind(
             final AuthUserIdentity identity, boolean validated) {
         return find.where().eq("validated", validated)
                 .eq("linkedAccounts.providerUserId", identity.getId())
@@ -291,7 +300,8 @@ public class User extends Model {
 
     public static User create(final AuthUser authUser) {
         final User user = new User();
-        user.validated = true;
+        user.validated = false;
+
         user.linkedAccounts = Collections.singletonList(LinkedAccount
                 .create(authUser));
 
@@ -301,6 +311,7 @@ public class User extends Model {
             // verified within the application as a security breach there might
             // break your security as well!
             user.email = identity.getEmail();
+            user.passwordHash = identity.getId();
             user.confirmationToken = UUID.randomUUID().toString();
         }
 
@@ -313,5 +324,15 @@ public class User extends Model {
         }
         user.save();
         return user;
+    }
+
+    @Override
+    public List<? extends Role> getRoles() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List<? extends Permission> getPermissions() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
