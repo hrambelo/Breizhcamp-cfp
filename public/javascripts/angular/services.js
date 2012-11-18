@@ -105,7 +105,18 @@ Services.factory('ProfilService', function($resource) {
         };
 
         this.getTalksAccepted = function (userId) {
-                return $resource('/user/:userId/talksAccepted').query({userId:userId});
+                return $resource('/user/:userId/talks/A').query({userId:userId});
+        };
+
+        this.getTalksRefused = function (userId) {
+            return $resource('/user/:userId/talks/R').query({userId:userId});
+        };
+
+        this.getTalksWait = function (userId) {
+            return $resource('/user/:userId/talks/W').query({userId:userId});
+        };
+        this.getUser = function (idUser) {
+            return $resource('/user/:id').get({id:idUser});
         }
     }
 
@@ -118,6 +129,14 @@ Services.factory('TalkService', function($resource) {
 
 Services.factory('AllTalkService', function($resource) {
     return $resource('/talk/all', {});
+});
+
+Services.factory('CreneauxService', function($resource) {
+    return $resource('/creneau/:id', {});
+});
+
+Services.factory('DynamicFieldsService', function($resource) {
+    return $resource('/dynamicfield/:id', {});
 });
 
 

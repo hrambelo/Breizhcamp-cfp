@@ -1,17 +1,9 @@
 package controllers.talks;
 
-import static play.libs.Json.toJson;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import controllers.Secured;
 import models.*;
 import models.utils.TransformValidationErrors;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ObjectNode;
 import play.Logger;
 import play.data.Form;
 import play.i18n.Messages;
@@ -20,6 +12,8 @@ import play.mvc.Result;
 import play.mvc.Security;
 
 import java.util.*;
+
+import static play.libs.Json.toJson;
 
 
 @Security.Authenticated(Secured.class)
@@ -31,24 +25,35 @@ public class TalkRestController extends Controller {
         if (user.admin) {
             talk.vote = Vote.findVoteByUserAndTalk(user, talk);
         }
+        talk.fiteredComments(user);
 		return ok(toJson(talk));
 	}
 	
 	public static Result get() {
 		User user = User.findByEmail(request().username());
-		List<Talk> talks = Talk.findBySpeaker(user);	
+		List<Talk> talks = Talk.findBySpeaker(user);
+        for (Talk talk : talks) {
+            talk.fiteredComments(user);
+        }
 		return ok(toJson(talks));
 	}
 
     public static Result getTalks(Long userId) {
         User user = User.find.byId(userId);
         List<Talk> talks = Talk.findBySpeaker(user);
+        for (Talk talk : talks) {
+            talk.fiteredComments(user);
+        }
         return ok(toJson(talks));
     }
 
-    public static Result getTalksAccepted(Long userId) {
+    public static Result getTalksByStatus(Long userId,String status) {
+        StatusTalk statusTalk = StatusTalk.fromCode(status);
         User user = User.find.byId(userId);
-        List<Talk> talks = Talk.findBySpeakerAndStatus(user, StatusTalk.ACCEPTE);
+        List<Talk> talks = Talk.findBySpeakerAndStatus(user, statusTalk);
+        for (Talk talk : talks) {
+            talk.fiteredComments(user);
+        }
         return ok(toJson(talks));
     }
 
@@ -63,6 +68,7 @@ public class TalkRestController extends Controller {
             if (VoteStatus.getVoteStatus() == VoteStatusEnum.CLOSED) {
                 talk.moyenne = Vote.calculMoyenne(talk);
             }
+            talk.fiteredComments(user);
         }
         return ok(toJson(talks));
     }
@@ -85,6 +91,8 @@ public class TalkRestController extends Controller {
                 return badRequest(toJson(TransformValidationErrors.transform(Messages.get("error.talk.already.exist"))));
             }
             formTalk.save();
+            formTalk.saveManyToManyAssociations("creneaux");
+            formTalk.update();
             updateTags(talkForm.data().get("tagsname"), formTalk);
         } else {
             // Mise à jour d'un talk
@@ -96,6 +104,7 @@ public class TalkRestController extends Controller {
             dbTalk.title = formTalk.title;
             dbTalk.description = formTalk.description;
             dbTalk.save();
+            updateCreneaux(formTalk, dbTalk);
             updateTags(talkForm.data().get("tagsname"), dbTalk);
         }
 
@@ -104,6 +113,30 @@ public class TalkRestController extends Controller {
         return noContent();
 	}
 
+    private static void updateCreneaux(Talk formTalk, Talk dbTalk) {
+        Set<Long> creneauxInForm = new HashSet<Long>();
+        for (Creneau creneau : formTalk.getCreneaux()) {
+            creneauxInForm.add(creneau.getId());
+        }
+        List<Creneau> creneauxTmp = new ArrayList<Creneau>(dbTalk.getCreneaux());
+        Set<Long> creneauxInDb = new HashSet<Long>();
+        for (Creneau creneau : creneauxTmp) {
+            if (!creneauxInForm.contains(creneau.getId())) {
+                dbTalk.getCreneaux().remove(creneau);
+            } else {
+                creneauxInDb.add(creneau.getId());
+            }
+        }
+
+        // ajout des creneaux ajoutés dans la liste
+        for (Long idCreneau : creneauxInForm) {
+            if (!creneauxInDb.contains(idCreneau)) {
+                dbTalk.getCreneaux().add(Creneau.find.byId(idCreneau));
+            }
+        }
+        dbTalk.saveManyToManyAssociations("creneaux");
+        dbTalk.update();
+    }
 
 
     public static void updateTags(String tags, Talk dbTalk) {
@@ -170,6 +203,12 @@ public class TalkRestController extends Controller {
             talk.getTags().remove(tag);
         }
         talk.saveManyToManyAssociations("tags");
+
+        List<Creneau> creneauxTmp = new ArrayList<Creneau>(talk.getCreneaux());
+        for (Creneau creneau : creneauxTmp) {
+            talk.getCreneaux().remove(creneau);
+        }
+        talk.saveManyToManyAssociations("creneaux");
         talk.delete();
         // HTTP 204 en cas de succès (NO CONTENT)
         return noContent();
@@ -181,8 +220,12 @@ public class TalkRestController extends Controller {
 
         JsonNode node = request().body().asJson();
         String commentForm = null;
+        boolean privateComment = false;
         if (node != null && node.get("comment") != null) {
             commentForm = node.get("comment").asText();
+            if (user.admin && node.get("private") != null) {
+                privateComment = node.get("private").asBoolean();
+            }
         } else {
             Map<String, List<String>> errors = new HashMap<String, List<String>>();
             errors.put("comment", Collections.singletonList(Messages.get("error.required")));
@@ -197,6 +240,7 @@ public class TalkRestController extends Controller {
             Comment comment = new Comment();
             comment.author = user;
             comment.comment = commentForm;
+            comment.privateComment = privateComment;
             comment.talk = talk;
             comment.save();
             comment.sendMail();

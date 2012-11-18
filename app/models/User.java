@@ -14,6 +14,7 @@ import models.utils.AppException;
 import models.utils.Hash;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.BooleanUtils;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
@@ -48,6 +49,7 @@ public class User extends Model implements RoleHolder {
 
     @Constraints.Required
     @Formats.NonEmpty
+    @JsonIgnore
     public String passwordHash;
 
     @Formats.DateTime(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -74,6 +76,31 @@ public class User extends Model implements RoleHolder {
 
     @Constraints.Pattern("^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$")
     public String adresseMac;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<DynamicFieldValue> dynamicFieldValues;
+
+    public List<DynamicFieldValue> getDynamicFieldValues() {
+        if (dynamicFieldValues == null) {
+            dynamicFieldValues = new ArrayList<DynamicFieldValue>();
+        }
+        return dynamicFieldValues;
+    }
+
+    @JsonProperty("dynamicFields")
+    public List<DynamicFieldJson> getDynamicFieldsJson() {
+        Map<Long, DynamicFieldValue> dynamicFieldValueByDynamicFieldId = new HashMap<Long, DynamicFieldValue>();
+        for (DynamicFieldValue value : getDynamicFieldValues()) {
+            dynamicFieldValueByDynamicFieldId.put(value.getDynamicField().getId(), value);
+        }
+        List<DynamicFieldJson> jsonFields = new ArrayList<DynamicFieldJson>();
+        for (DynamicField field : DynamicField.find.all()) {
+            jsonFields.add(DynamicFieldJson.toDynamicFieldJson(field, dynamicFieldValueByDynamicFieldId.get(field.getId())));
+        }
+        return jsonFields;
+    }
+
 
     public boolean getNotifOnMyTalk() {
         return BooleanUtils.isNotFalse(notifOnMyTalk);
@@ -136,6 +163,10 @@ public class User extends Model implements RoleHolder {
      */
     public static User findByEmail(String email) {
         return find.where().eq("email", email).findUnique();
+    }
+
+    public static User findById(Long id) {
+        return find.where().eq("id", id).findUnique();
     }
 
     /**
@@ -335,4 +366,5 @@ public class User extends Model implements RoleHolder {
     public List<? extends Permission> getPermissions() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
 }

@@ -4,23 +4,28 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2 breadcrumb">
-                <img ng-src="{{user.avatar}}?s=100"><br/>
+                <img ng-src="{{pUser.avatar}}?s=100"><br/>
             </div>
             <div class="span10">
                 <div class="well">
-                    <h2>{{user.fullname}}</h2>
-                    <p ng-show="user.admin && talks.length==0">(Organisateur)</p>
-                    <p ng-show="user.admin && talks.length!=0 ">(Speaker/Organisateur)</p>
-                    <p ng-show="!user.admin && talks.length!=0 ">(Speaker)</p><br />
+                    <h2>{{pUser.fullname}}</h2>
+                    <p ng-show="pUser.admin && talks.length==0">(Organisateur)</p>
+                    <p ng-show="pUser.admin && talks.length!=0 ">(Speaker/Organisateur)</p>
+                    <p ng-show="!pUser.admin && talks.length!=0 ">(Speaker)</p><br />
 
-                    {{user.description}}
-
-                    <br /><br/>
+                    <div class="well" markdownpreview="pUser.description"></div>
                     <h3>Liens</h3>
-                    <p ng-show="user.liens.length == 0">
+                    <p ng-show="pUser.liens.length == 0">
                         - aucun lien
                     </p>
-                    <p ng-repeat="lien in user.liens">- <a ng-href="{{lien.url}}" target="_blank">{{lien.label}}</a></p>
+                    <p ng-repeat="lien in pUser.liens">- <a ng-href="{{lien.url}}" target="_blank">{{lien.label}}</a></p>
+
+                    <div>
+                        <h3 >Autres informations</h3>
+                        <ul>
+                            <li ng-repeat="dynamicField in user.dynamicFields"><strong>{{dynamicField.name}} : </strong>{{dynamicField.value}}</li>
+                        </ul>
+                    </div>
 
                     <h3 ng-show="talks.length > 0">Talks proposés</h3>
                     <p ng-show="talks.length == 1">
@@ -31,7 +36,7 @@
                     </p>
 
                     <h3 ng-show="talksok.length > 0">Talks acceptés</h3>
-                    <p ng-repeat="talk in talksok">- <a ng-href="/#/talks/see/{{talk.id}}" title="{{talk.description}}" >{{talk.title}}</a></p>
+                    <p ng-repeat="talk in talksok">- <a ng-href="/#/talks/see/{{talk.id}}" title="{{talk.title}}" >{{talk.title}}</a></p>
                 </div>
             </div>
         </div>

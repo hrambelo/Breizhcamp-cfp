@@ -2,7 +2,7 @@
 
 
 // Declare app level module which depends on filters, and services
-var App = angular.module('breizhCampCFP', ['breizhCampCFP.services']); // , ['breizhCampCFP.filters', 'breizhCampCFP.services', 'breizhCampCFP.directives']).
+var App = angular.module('breizhCampCFP', ['breizhCampCFP.services', 'breizhCampCFP.directives']); // , ['breizhCampCFP.filters', 'breizhCampCFP.services', 'breizhCampCFP.directives']).
 
 
 // Configuration des routes
@@ -16,6 +16,14 @@ App.config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/admin/users', {templateUrl: '/assets/pages/partials/users.html', controller: ManageUsersController});
     $routeProvider.when('/admin/talks/list', {templateUrl: '/assets/pages/partials/listtalks.html', controller: ListTalksController});
     $routeProvider.when('/admin/vote', {templateUrl: 'assets/pages/partials/vote.html', controller: VoteController});
+    $routeProvider.when('/admin/creneaux', {templateUrl: 'assets/pages/partials/creneaux.html', controller: CreneauxController});
+    $routeProvider.when('/admin/creneau/new', {templateUrl: 'assets/pages/partials/submitcreneau.html', controller: NewCreneauController});
+    $routeProvider.when('/admin/creneau/edit/:creneauId', {templateUrl: 'assets/pages/partials/submitcreneau.html', controller: EditCreneauController});
+
+    $routeProvider.when('/admin/dynamicfields', {templateUrl: 'assets/pages/partials/dynamicfields.html', controller: DynamicFieldsController});
+    $routeProvider.when('/admin/dynamicfield/new', {templateUrl: 'assets/pages/partials/submitdynamicfield.html', controller: NewDynamicFieldController});
+    $routeProvider.when('/admin/dynamicfield/edit/:dynamicFieldId', {templateUrl: 'assets/pages/partials/submitdynamicfield.html', controller: EditDynamicFieldController});
+
     $routeProvider.when('/talks/see/:talkId', {templateUrl: '/assets/pages/partials/seetalk.html', controller: SeeTalksController});
 
     $routeProvider.when('/profil/:userId', {templateUrl: '/assets/pages/partials/profil.html', controller: ProfilController});
