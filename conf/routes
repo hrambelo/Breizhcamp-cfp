@@ -8,6 +8,8 @@ GET     /                           controllers.Assets.at(path="/public", file="
 POST    /login                      controllers.Application.authenticate()
 GET     /logout                     controllers.Application.logout()
 
+GET     /image/:uri                 controllers.account.settings.Account.getImage(uri:String)
+
 GET     /settings/user/:id          controllers.account.settings.Account.getUser(id:Long)
 POST    /settings/password          controllers.account.settings.Password.runPassword()
 POST    /settings/email             controllers.account.settings.Email.runEmail()

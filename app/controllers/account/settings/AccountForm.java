@@ -1,7 +1,6 @@
 package controllers.account.settings;
 
 import models.DynamicFieldJson;
-import models.User;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
 
@@ -13,6 +12,17 @@ public class AccountForm {
     @Formats.NonEmpty
     @Constraints.MaxLength(2000)
     public String description;
+
+    public byte[] profilImage;
+
+
+    public byte[] getProfilImage() {
+        return profilImage;
+    }
+
+    public void setProfilImage(byte[] profilImage) {
+        this.profilImage = profilImage;
+    }
 
     public String getDescription() {
         return description;

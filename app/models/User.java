@@ -6,6 +6,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
+import play.Configuration;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
@@ -131,6 +132,25 @@ public class User extends Model {
             avatar = GRAVATAR_URL + emailHash + ".jpg";
         }
         return avatar;
+    }
+
+    public String getProfilImage() {
+        return profilImage;
+    }
+
+    public void setProfilImage(String profilImage) {
+        this.profilImage = profilImage;
+    }
+
+    @Column
+    public String profilImage;
+
+
+    public String getProfilImg() {
+        if (profilImage == null) {
+           return getAvatar();
+        }
+        return "http://" + Configuration.root().getString("server.hostname")+"/image/"+profilImage;
     }
 
     // -- Queries (long id, user.class)

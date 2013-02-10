@@ -19,7 +19,17 @@
             <div class="span10">
                 <div class="well">
                     <a ng-click="appercu()" >aperçu</a>
-                    <form ng-submit="saveSettings()">
+                    <form ENCTYPE="multipart/form-data" ng-submit="saveSettings()">
+                        <fieldset>
+                            <legend>Image du profil</legend>
+                            <div class="control-group {{{true:'error', false:''}[errors.image != undefined]}}">
+                                <div class="controls">
+                                    <input type="file" id="image" name="image" value="{{user.profilImg}}" placeholder="URL" class="input-xxlarge" ng-model="user.profilImage" />
+                                    <p class="help-inline" ng-repeat="error in errors.image">{{error}}</p>
+                                </div>
+                            </div>
+                        </fieldset>
+
                         <fieldset>
                             <legend>Description/Bio</legend>
                             <div class="control-group {{{true:'error', false:''}[errors.description != undefined]}}">

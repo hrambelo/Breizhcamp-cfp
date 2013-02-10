@@ -5,11 +5,16 @@ import models.*;
 import models.utils.TransformValidationErrors;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
+import play.Logger;
 import play.data.Form;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,15 +33,15 @@ public class Account extends Controller {
         }
         return ok(toJson(user));
     }
-    
+
     public static Result deleteLink(Long idLink) {
-    	
-    	Lien lien = Lien.find.byId(idLink);
-    	lien.delete();
-    	
-    	return ok();
+
+        Lien lien = Lien.find.byId(idLink);
+        lien.delete();
+
+        return ok();
     }
-    
+
     public static Result save() {
         User user = User.findByEmail(request().username());
         Form<AccountForm> accountForm;
@@ -49,7 +54,7 @@ public class Account extends Controller {
 
         // Parcour des liens du user;
         ArrayNode liens = (ArrayNode) userJson.get("liens");
-        for (JsonNode lien : liens ) {
+        for (JsonNode lien : liens) {
             if (lien.get("id") != null) {
                 Form<Lien> oneLienForm = form(Lien.class).bind(lien);
                 if (oneLienForm.hasErrors()) {
@@ -74,24 +79,42 @@ public class Account extends Controller {
             return badRequest(toJson(TransformValidationErrors.transform(newLink.errors())));
         }
         if (newLink != null && newLink.hasErrors()) {
-        	newLink.errors().clear();
+            newLink.errors().clear();
         }
-        
+
         if (accountForm.hasErrors()) {
             return badRequest(toJson(TransformValidationErrors.transform(accountForm.errors())));
         }
-        
+
         for (Lien oneLien : user.getLiens()) {
-        	Form<Lien> lienForm = liensForms.remove(0);
-        	oneLien.label = lienForm.get().label;
-        	oneLien.url = lienForm.get().url;
+            Form<Lien> lienForm = liensForms.remove(0);
+            oneLien.label = lienForm.get().label;
+            oneLien.url = lienForm.get().url;
         }
-        
+
         user.description = accountForm.get().description;
-        
+        //TODO controller la taille des images
+
+        Image image = Image.findByUri("avatar_" + user.id);
+
+        if (image != null) {
+            Logger.debug("image size "+image.image.length+"for "+image.uri);
+            image.image = accountForm.get().profilImage;
+            image.update();
+        } else {
+            image = new Image();
+            image.uri = "avatar_" + user.id;
+            Logger.debug("image size "+image.image.length+"for "+image.uri);
+            image.image = accountForm.get().profilImage;
+
+            image.save();
+            user.setProfilImage(image.uri);
+        }
+
+
         if (newLinkExists(newLink, newLabel, newUrl)) {
-        	Lien lien = newLink.get();
-        	user.getLiens().add(lien);
+            Lien lien = newLink.get();
+            user.getLiens().add(lien);
         }
 
         user.save();
@@ -115,6 +138,56 @@ public class Account extends Controller {
         }
 
         return ok();
+    }
+
+    public static Result getImage(String uri) {
+        Image image = Image.findByUri(uri);
+        Logger.debug("image size "+image.image.length+"for "+uri);
+        return ok(image.image).as("image/jpeg");
+    }
+
+    public static byte[] getBytesFromFile(File file) throws IOException {
+
+        if (file != null) {
+            // Get the size of the file
+            long length = file.length();
+
+            // You cannot create an array using a long type.
+            // It needs to be an int type.
+            // Before converting to an int type, check
+            // to ensure that file is not larger than Integer.MAX_VALUE.
+            if (length > Integer.MAX_VALUE) {
+                // File is too large
+                throw new IOException("File is too large!");
+            }
+
+            // Create the byte array to hold the data
+            byte[] bytes = new byte[(int) length];
+
+            // Read in the bytes
+            int offset = 0;
+            int numRead = 0;
+
+            Logger.debug(file.getCanonicalPath());
+            Logger.debug(file.getName());
+            Logger.debug(file.getPath());
+            InputStream is = new FileInputStream(file);
+            try {
+                while (offset < bytes.length
+                        && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
+                    offset += numRead;
+                }
+            } finally {
+                is.close();
+            }
+
+            // Ensure all the bytes have been read in
+            if (offset < bytes.length) {
+                throw new IOException("Could not completely read file " + file.getName());
+            }
+            return bytes;
+        }
+        return null;
     }
 
     public static class MacForm {
